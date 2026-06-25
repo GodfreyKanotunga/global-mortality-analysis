@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Mortality Patterns Dashboard (2010–2019)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#0d1b2e;--blue:#1b4f8a;--mid:#2c6fad;--teal:#1a8a6e;
+    --red:#c0392b;--gold:#d4a020;--muted:#7a8fa6;
+    --light:#eef3fa;--bg:#f5f7fc;--card:#ffffff;--border:#dde5f0;
+    --green:#27ae60;--orange:#e67e22;
+  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh;}
+
+  header{
+    background:var(--navy);color:#fff;padding:20px 36px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:3px solid var(--teal);
+  }
+  .hdr-left{display:flex;align-items:center;gap:14px;}
+  .hdr-icon{
+    width:46px;height:46px;border-radius:8px;
+    background:linear-gradient(135deg,var(--teal),var(--mid));
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.4rem;flex-shrink:0;
+  }
+  .hdr-title h1{font-family:'DM Serif Display',serif;font-size:1.35rem;font-weight:400;}
+  .hdr-title p{font-size:0.7rem;color:#8a9bb5;margin-top:3px;letter-spacing:.07em;text-transform:uppercase;}
+  .hdr-right{text-align:right;font-size:0.7rem;color:#8a9bb5;line-height:1.7;}
+  .hdr-right strong{color:#c8d8eb;font-weight:500;}
+
+  .notice{
+    background:#0f2340;border-left:3px solid var(--teal);
+    padding:8px 36px;font-size:0.7rem;color:#8a9bb5;
+  }
+
+  main{padding:24px 36px;max-width:1380px;margin:0 auto;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{
+    background:var(--card);border:1px solid var(--border);border-radius:8px;
+    padding:16px 18px;position:relative;overflow:hidden;
+  }
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mid);}
+  .kpi.t{&::before{background:var(--teal);}}
+  .kpi.g{&::before{background:var(--green);}}
+  .kpi.r{&::before{background:var(--red);}}
+  .kpi.o{&::before{background:var(--orange);}}
+  .kpi-lbl{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .kpi-val{font-size:1.6rem;font-weight:700;color:var(--navy);line-height:1;}
+  .kpi-sub{font-size:.68rem;color:var(--muted);margin-top:5px;}
+  .badge{display:inline-block;font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:5px;}
+  .badge-up{background:#e6f7ef;color:var(--green);}
+  .badge-warn{background:#fdf3e7;color:var(--orange);}
+  .badge-info{background:#eef3fa;color:var(--mid);}
+  .badge-red{background:#fdecea;color:var(--red);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  .grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:18px;margin-bottom:18px;}
+  .grid-full{margin-bottom:18px;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px 22px;}
+  .card-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .card-title{font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);}
+  .card-sub{font-size:.67rem;color:var(--muted);margin-top:3px;}
+  .card-tag{font-size:.6rem;padding:3px 9px;border-radius:20px;background:var(--light);color:var(--mid);font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+
+  /* model results table */
+  .model-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+  .model-table th{background:var(--light);padding:9px 12px;text-align:left;font-weight:600;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .model-table td{padding:10px 12px;border-bottom:1px solid var(--border);}
+  .model-table tr:last-child td{border-bottom:none;}
+  .model-table tr:hover td{background:#f8fafd;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:600;}
+  .pill-best{background:#e6f7ef;color:var(--green);}
+  .pill-mid{background:#eef3fa;color:var(--mid);}
+  .pill-low{background:#fdecea;color:var(--red);}
+
+  /* cluster legend */
+  .cluster-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap;}
+  .cl-item{display:flex;align-items:center;gap:6px;font-size:.72rem;}
+  .cl-dot{width:12px;height:12px;border-radius:50%;}
+
+  footer{text-align:center;padding:18px;font-size:.67rem;color:var(--muted);border-top:1px solid var(--border);margin-top:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <div class="hdr-icon">🌍</div>
+    <div class="hdr-title">
+      <h1>Global Mortality Patterns & Country Clustering</h1>
+      <p>A Data-Driven Analysis of Causes of Death · 2010–2019 · 192 Countries</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <strong>Godfrey M. Kanotunga · Isabel T. Mhike</strong><br>
+    Applied Data Science · Clarkson University<br>
+    Python · PCA · K-Means · Random Forest
+  </div>
+</header>
+
+<div class="notice">
+  📄 &nbsp;This dashboard presents findings from: <em>Global Mortality Patterns and Country Clustering: A Data-Driven Analysis of Causes of Death (2010–2019)</em> · IA650 Data Mining · Clarkson University
+</div>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi t">
+      <div class="kpi-lbl">Total Deaths (2010–2019)</div>
+      <div class="kpi-val">506M</div>
+      <div class="kpi-sub">Cumulative across 192 countries</div>
+      <span class="badge badge-warn">↑ Rising Absolute Burden</span>
+    </div>
+    <div class="kpi">
+      <div class="kpi-lbl">Avg Death Rate (2019)</div>
+      <div class="kpi-val">747</div>
+      <div class="kpi-sub">Per 100,000 population</div>
+      <span class="badge badge-up">↓ Declining Rate</span>
+    </div>
+    <div class="kpi r">
+      <div class="kpi-lbl">Leading Cause</div>
+      <div class="kpi-val" style="font-size:1.1rem">Cardiovascular</div>
+      <div class="kpi-sub">168M deaths 2010–2019</div>
+      <span class="badge badge-red">33% of total</span>
+    </div>
+    <div class="kpi g">
+      <div class="kpi-lbl">RF Classification</div>
+      <div class="kpi-val">98.4%</div>
+      <div class="kpi-sub">Cluster prediction accuracy</div>
+      <span class="badge badge-up">F1 = 0.98</span>
+    </div>
+    <div class="kpi o">
+      <div class="kpi-lbl">PCA Variance Explained</div>
+      <div class="kpi-val">54.4%</div>
+      <div class="kpi-sub">First 2 components</div>
+      <span class="badge badge-info">PC1: 39.3% · PC2: 15.1%</span>
+    </div>
+  </div>
+
+  <!-- Row 1: Trend + Top Causes -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Global Mortality Trend (2010–2019)</div>
+          <div class="card-sub">Total deaths vs avg death rate per 100k — diverging trends reveal population growth as the key driver</div>
+        </div>
+        <span class="card-tag">Trend</span>
+      </div>
+      <canvas id="trendChart" height="200"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Top 10 Causes of Death</div>
+          <div class="card-sub">Cumulative global deaths 2010–2019</div>
+        </div>
+        <span class="card-tag">Burden</span>
+      </div>
+      <canvas id="causesChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2: Income comparison + Cluster scatter + Model results -->
+  <div class="grid3">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Mortality Burden by Income Group</div>
+          <div class="card-sub">Average cause-specific deaths — chronic vs infectious burden split</div>
+        </div>
+        <span class="card-tag">Income</span>
+      </div>
+      <canvas id="incomeChart" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">PCA Cluster Projection</div>
+          <div class="card-sub">Countries in 2-D mortality space</div>
+        </div>
+        <span class="card-tag">PCA</span>
+      </div>
+      <canvas id="scatterChart" height="220"></canvas>
+      <div class="cluster-legend">
+        <div class="cl-item"><div class="cl-dot" style="background:#1b4f8a"></div>High Chronic</div>
+        <div class="cl-item"><div class="cl-dot" style="background:#c0392b"></div>High Vulnerability</div>
+        <div class="cl-item"><div class="cl-dot" style="background:#27ae60"></div>Transition</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Cluster Burden Profiles</div>
+          <div class="card-sub">Average log-rate by cluster</div>
+        </div>
+        <span class="card-tag">Clusters</span>
+      </div>
+      <canvas id="clusterChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 3: Model results table -->
+  <div class="card grid-full">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Supervised Model Results</div>
+        <div class="card-sub">Comparison of Linear Regression, Random Forest Regression, and Random Forest Classification</div>
+      </div>
+      <span class="card-tag">Models</span>
+    </div>
+    <table class="model-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Task</th>
+          <th>RMSE</th>
+          <th>R²</th>
+          <th>Accuracy</th>
+          <th>Macro F1</th>
+          <th>Performance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Random Forest Classification</strong></td>
+          <td>Mortality cluster prediction</td>
+          <td>—</td>
+          <td>—</td>
+          <td><strong>98.4%</strong></td>
+          <td><strong>0.98</strong></td>
+          <td><span class="pill pill-best">Best Overall</span></td>
+        </tr>
+        <tr>
+          <td><strong>Random Forest Regression</strong></td>
+          <td>Cardiovascular rate prediction</td>
+          <td>47.23</td>
+          <td>0.93</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="pill pill-mid">Strong</span></td>
+        </tr>
+        <tr>
+          <td><strong>Linear Regression</strong></td>
+          <td>Cardiovascular rate prediction</td>
+          <td>133.70</td>
+          <td>0.44</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="pill pill-low">Baseline</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:.68rem;color:var(--muted);margin-top:12px;">Random Forest Classification's 98.4% accuracy confirms that mortality cluster patterns are highly structured and predictable — validating the PCA + K-means unsupervised analysis.</p>
+  </div>
+
+  <!-- Row 4: Key findings -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Death Rate Trend</div>
+          <div class="card-sub">Average death rate per 100k declining despite rising totals</div>
+        </div>
+        <span class="card-tag">Rate</span>
+      </div>
+      <canvas id="rateChart" height="180"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Chronic vs Infectious Burden</div>
+          <div class="card-sub">Global cumulative deaths by broad category (2010–2019)</div>
+        </div>
+        <span class="card-tag">Category</span>
+      </div>
+      <canvas id="categoryChart" height="180"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Global Mortality Patterns Dashboard · Godfrey M. Kanotunga & Isabel T. Mhike · Applied Data Science · Clarkson University ·
+  IA650 Data Mining · Dataset: Our World in Data / WHO GHE · Built with Chart.js
+</footer>
+
+<script>
+const NAVY='#0d1b2e', BLUE='#1b4f8a', MID='#2c6fad', TEAL='#1a8a6e',
+      RED='#c0392b', GOLD='#d4a020', MUTED='#7a8fa6', GREEN='#27ae60',
+      ORANGE='#e67e22', LIGHT='#eef3fa';
+
+Chart.defaults.font.family='Inter,sans-serif';
+Chart.defaults.color=MUTED;
+
+// ── Trend Chart ───────────────────────────────────────────────────────────────
+const years=[2010,2011,2012,2013,2014,2015,2016,2017,2018,2019];
+const totalDeaths=[49132168,49128691,49341965,49687020,50022415,50615832,51089649,51531694,52281197,53082708];
+const deathRate=[777.2,758.1,752.2,747.9,747.1,748.5,746.0,745.3,745.5,747.2];
+
+new Chart(document.getElementById('trendChart'),{
+  type:'line',
+  data:{
+    labels:years,
+    datasets:[
+      {label:'Total Deaths (M)',data:totalDeaths.map(v=>+(v/1e6).toFixed(2)),
+       borderColor:BLUE,backgroundColor:'rgba(27,79,138,0.08)',fill:true,borderWidth:2.5,pointRadius:4,yAxisID:'y1',tension:0.3},
+      {label:'Death Rate /100k',data:deathRate,
+       borderColor:RED,backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,yAxisID:'y2',tension:0.3,borderDash:[5,3]}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:12,font:{size:11}}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10}}},
+      y1:{position:'left',grid:{color:'#eef2fb'},ticks:{callback:v=>v+'M',font:{size:10}}},
+      y2:{position:'right',grid:{display:false},ticks:{font:{size:10}},min:730,max:790}
+    }
+  }
+});
+
+// ── Top Causes ────────────────────────────────────────────────────────────────
+const causes=['Cardiovascular','Neoplasms','Chronic Resp.','Lower Resp. Inf.','Neonatal','Diarrheal','Tuberculosis','Diabetes','Road Injuries','HIV/AIDS'];
+const causeVals=[168112515,89544090,36592499,24085313,20431293,16406580,12120954,13090873,11959460,10116014];
+const causeColors=[RED,BLUE,MID,TEAL,ORANGE,GREEN,GOLD,'#8e44ad','#16a085','#e74c3c'];
+
+new Chart(document.getElementById('causesChart'),{
+  type:'bar',
+  data:{
+    labels:causes,
+    datasets:[{label:'Total Deaths',data:causeVals.map(v=>+(v/1e6).toFixed(1)),
+      backgroundColor:causeColors,borderRadius:4,borderWidth:0}]
+  },
+  options:{
+    responsive:true,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x}M deaths`}}},
+    scales:{
+      x:{grid:{color:'#eef2fb'},ticks:{callback:v=>v+'M',font:{size:10}}},
+      y:{grid:{display:false},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ── Income Chart ──────────────────────────────────────────────────────────────
+const incomeGroups=['High Income','Upper Middle','Lower Middle','Low Income'];
+const cvd=[66313,134730,96712,25658];
+const neoplasms=[47770,71801,35546,9580];
+const lri=[6342,10380,24304,11869];
+const hivData=[502,5346,10133,9079];
+const neonatal=[511,5252,29481,14350];
+
+new Chart(document.getElementById('incomeChart'),{
+  type:'bar',
+  data:{
+    labels:incomeGroups,
+    datasets:[
+      {label:'Cardiovascular',data:cvd,backgroundColor:RED,borderRadius:3},
+      {label:'Neoplasms',data:neoplasms,backgroundColor:BLUE,borderRadius:3},
+      {label:'Lower Resp. Inf.',data:lri,backgroundColor:TEAL,borderRadius:3},
+      {label:'HIV/AIDS',data:hivData,backgroundColor:ORANGE,borderRadius:3},
+      {label:'Neonatal',data:neonatal,backgroundColor:GOLD,borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10}}}},
+    scales:{
+      x:{stacked:false,grid:{display:false},ticks:{font:{size:9}}},
+      y:{grid:{color:'#eef2fb'},ticks:{callback:v=>(v/1000).toFixed(0)+'K',font:{size:10}}}
+    }
+  }
+});
+
+// ── PCA Scatter ───────────────────────────────────────────────────────────────
+const scatterData=[
+  {x:-1.07,y:-1.37,c:0},{x:1.44,y:-0.33,c:1},{x:3.28,y:1.91,c:1},{x:2.45,y:1.67,c:1},
+  {x:-2.69,y:-0.76,c:2},{x:-1.23,y:-0.45,c:0},{x:2.1,y:1.2,c:1},{x:-2.1,y:-1.1,c:2},
+  {x:1.8,y:0.9,c:1},{x:-0.5,y:-0.8,c:0},{x:3.1,y:2.1,c:1},{x:-3.2,y:-0.9,c:2},
+  {x:0.8,y:0.4,c:0},{x:2.8,y:1.5,c:1},{x:-1.9,y:-1.3,c:2},{x:1.2,y:0.6,c:1},
+  {x:-2.3,y:-0.5,c:0},{x:3.5,y:2.3,c:1},{x:-0.9,y:-1.1,c:2},{x:2.2,y:1.0,c:1},
+  {x:-1.5,y:-0.7,c:0},{x:0.5,y:0.2,c:1},{x:-2.8,y:-1.0,c:2},{x:1.7,y:0.8,c:1},
+  {x:-0.3,y:-0.5,c:0},{x:3.0,y:1.8,c:1},{x:-1.1,y:-0.9,c:2},{x:2.5,y:1.3,c:1},
+  {x:-2.0,y:-0.6,c:0},{x:0.9,y:0.3,c:1},{x:-2.5,y:-0.8,c:2},{x:1.4,y:0.5,c:1},
+  {x:-0.7,y:-1.0,c:0},{x:2.7,y:1.6,c:1},{x:-1.3,y:-1.2,c:2},{x:2.0,y:1.1,c:1},
+  {x:-1.8,y:-0.4,c:0},{x:3.3,y:2.0,c:1},{x:-0.4,y:-0.6,c:2},{x:1.9,y:0.7,c:1}
+];
+const clColors=[BLUE,RED,GREEN];
+const clLabels=['High Chronic (Cluster 0)','High Vulnerability (Cluster 1)','Transition/Mixed (Cluster 2)'];
+
+new Chart(document.getElementById('scatterChart'),{
+  type:'scatter',
+  data:{
+    datasets:[0,1,2].map(c=>({
+      label:clLabels[c],
+      data:scatterData.filter(d=>d.c===c).map(d=>({x:d.x,y:d.y})),
+      backgroundColor:clColors[c]+'99',
+      borderColor:clColors[c],
+      borderWidth:1, pointRadius:5
+    }))
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{title:{display:true,text:'PC1 — Infectious/Vulnerability Burden',font:{size:10}},grid:{color:'#eef2fb'},ticks:{font:{size:9}}},
+      y:{title:{display:true,text:'PC2 — Chronic/Lifestyle Burden',font:{size:10}},grid:{color:'#eef2fb'},ticks:{font:{size:9}}}
+    }
+  }
+});
+
+// ── Cluster Profiles ──────────────────────────────────────────────────────────
+new Chart(document.getElementById('clusterChart'),{
+  type:'bar',
+  data:{
+    labels:['HIV/AIDS','CVD','Neonatal','LRI','Diarrheal'],
+    datasets:[
+      {label:'High Chronic',data:[4.52,9.41,5.86,6.1,4.2],backgroundColor:BLUE,borderRadius:3},
+      {label:'High Vulnerability',data:[8.08,10.90,9.13,8.5,7.8],backgroundColor:RED,borderRadius:3},
+      {label:'Transition',data:[1.96,5.90,2.62,3.1,1.8],backgroundColor:GREEN,borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10}}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10}}},
+      y:{grid:{color:'#eef2fb'},title:{display:true,text:'Avg Log-Rate',font:{size:9}},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ── Rate Trend ────────────────────────────────────────────────────────────────
+new Chart(document.getElementById('rateChart'),{
+  type:'line',
+  data:{
+    labels:years,
+    datasets:[{
+      label:'Avg Death Rate /100k',
+      data:deathRate,
+      borderColor:TEAL,backgroundColor:'rgba(26,138,110,0.08)',fill:true,
+      borderWidth:2.5,pointRadius:4,tension:0.3
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10}}},
+      y:{grid:{color:'#eef2fb'},min:730,max:790,ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// ── Category Donut ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('categoryChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Cardiovascular','Neoplasms','Chronic Respiratory','Infectious & Maternal','Other'],
+    datasets:[{
+      data:[168112515,89544090,36592499,95547607,116116497],
+      backgroundColor:[RED,BLUE,MID,ORANGE,TEAL],
+      borderWidth:2,borderColor:'#fff'
+    }]
+  },
+  options:{
+    responsive:true,cutout:'55%',
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:11,padding:10,font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>{
+        const total=ctx.dataset.data.reduce((a,b)=>a+b,0);
+        return ` ${ctx.label}: ${(ctx.parsed/total*100).toFixed(1)}%`;
+      }}}
+    }
+  }
+});
+</script>
+</body>
+</html>
