@@ -4,13 +4,13 @@
 
 A data-driven analysis of global causes of death across 192 countries from 2010 to 2019, using PCA, K-means clustering, and supervised machine learning to identify mortality patterns and country profiles.
 
-> 📄 Full paper: [View Research Paper](./Global_Mortality_Analysis_Paper.pdf)
+> 📄 **[⬇ Download Research Paper (PDF)](./20260401_Isabel_Godfrey_IA650%20(4).pdf)**
 
 ---
 
 ## 🔗 Live Dashboard
 
-**[View Interactive Dashboard](https://godfreykanotunga.github.io/global-mortality-analysis/mortality_dashboard.html)**
+**[🔗 View Interactive Dashboard](https://godfreykanotunga.github.io/global-mortality-analysis/mortality_dashboard.html)**
 
 ---
 
@@ -56,7 +56,10 @@ A data-driven analysis of global causes of death across 192 countries from 2010 
 
 Key variables: country, income group, population, year, age 65+%, dependency ratio, total deaths, death rate per 100k, and 32 cause-specific death counts.
 
-**Source:** Our World in Data / WHO Global Health Estimates
+**Sources:**
+- Population & age data: [Our World in Data](https://ourworldindata.org/grapher/population-by-age-group?overlay=download-data)
+- Disease dataset: [Kaggle — Cause of Deaths Around the World](https://www.kaggle.com/datasets/iamsouravbanerjee/cause-of-deaths-around-the-world)
+- Income classification: [World Bank Country Lending Groups](https://datahelpdesk.worldbank.org/knowledgebase/articles/906519-world-bank-country-and-lending-groups)
 
 ---
 
