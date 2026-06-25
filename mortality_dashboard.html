@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  <!-- Row 1: Trend + Top Causes -->
+  <!-- Row 1: Trend + Death Rate Trend (both time series together) -->
   <div class="grid2">
     <div class="card">
       <div class="card-hdr">
@@ -161,6 +161,20 @@
     <div class="card">
       <div class="card-hdr">
         <div>
+          <div class="card-title">Death Rate Trend (2010–2019)</div>
+          <div class="card-sub">Average death rate per 100k declining despite rising absolute totals</div>
+        </div>
+        <span class="card-tag">Rate</span>
+      </div>
+      <canvas id="rateChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2: Top Causes + Chronic vs Infectious (both burden/category charts together) -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hdr">
+        <div>
           <div class="card-title">Top 10 Causes of Death</div>
           <div class="card-sub">Cumulative global deaths 2010–2019</div>
         </div>
@@ -168,9 +182,20 @@
       </div>
       <canvas id="causesChart" height="200"></canvas>
     </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Chronic vs Infectious Burden</div>
+          <div class="card-sub">Global cumulative deaths by broad category (2010–2019)</div>
+        </div>
+        <span class="card-tag">Category</span>
+      </div>
+      <canvas id="categoryChart" height="200"></canvas>
+    </div>
   </div>
 
-  <!-- Row 2: Income comparison + Cluster scatter + Model results -->
+  <!-- Row 3: Income comparison + PCA Scatter + Cluster Profiles -->
   <div class="grid3">
     <div class="card">
       <div class="card-hdr">
@@ -211,7 +236,7 @@
     </div>
   </div>
 
-  <!-- Row 3: Model results table -->
+  <!-- Row 4: Model results table (bottom) -->
   <div class="card grid-full">
     <div class="card-hdr">
       <div>
@@ -263,30 +288,6 @@
       </tbody>
     </table>
     <p style="font-size:.68rem;color:var(--muted);margin-top:12px;">Random Forest Classification's 98.4% accuracy confirms that mortality cluster patterns are highly structured and predictable — validating the PCA + K-means unsupervised analysis.</p>
-  </div>
-
-  <!-- Row 4: Key findings -->
-  <div class="grid2">
-    <div class="card">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Death Rate Trend</div>
-          <div class="card-sub">Average death rate per 100k declining despite rising totals</div>
-        </div>
-        <span class="card-tag">Rate</span>
-      </div>
-      <canvas id="rateChart" height="180"></canvas>
-    </div>
-    <div class="card">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Chronic vs Infectious Burden</div>
-          <div class="card-sub">Global cumulative deaths by broad category (2010–2019)</div>
-        </div>
-        <span class="card-tag">Category</span>
-      </div>
-      <canvas id="categoryChart" height="180"></canvas>
-    </div>
   </div>
 
 </main>
